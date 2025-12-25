@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+@media print {
+  /* Hide interactive elements */
+  .no-print, button, input, select, textarea, .MuiIconButton-root, .MuiButton-root, .MuiTablePagination-root { display: none !important; }
+  /* Remove link decorations and avoid printing URLs */
+  a { color: inherit; text-decoration: none; }
+  a::after { content: "" !important; }
+
+  /* Ensure a clean background and accurate colors when printing */
+  html, body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* Headings prominence */
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  h2, h3 { color: #111; }
+
+  /* Tables: minimal borders, clear spacing */
+  table { border-collapse: collapse !important; box-shadow: none !important; }
+  th, td { border: 1px solid #ddd !important; padding: 8px !important; }
+
+  /* Lists: ensure dot markers print and have readable spacing */
+  ul, ol { margin: 6px 0 12px 18px; }
+
+  /* Avoid large shadows/gradients that don't print well */
+  * { box-shadow: none !important; background-image: none !important; }
+
+  /* Hide details/summary markers (e.g. expand/collapse) */
+  summary::-webkit-details-marker, details summary::marker { display: none !important; }
+  /* Hide elements that are interactive */
+  [role="button"] { display: none !important; }
+}

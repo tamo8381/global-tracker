@@ -1,0 +1,136 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Print styles for dialogs and company views */
+@media print {
+  /* Show only the printable company dialog and hide everything else for a clean PDF */
+  body * { visibility: hidden; }
+  .print-company, .print-company * { visibility: visible; }
+  /* Use normal document flow for printable sections to avoid overlap and stacking issues */
+  .print-company {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    max-width: 100%;
+    padding: 12mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    box-sizing: border-box;
+    display: block;
+  }
+  /* Ensure generated printed content is visible even when body * visibility is altered */
+  .generated-print, .generated-print * {
+    visibility: visible !important;
+  }
+  .generated-print {
+    position: relative !important;
+    z-index: 2147483647 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Make company view content clean and printer-friendly */
+  .print-company {
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .print-company .MuiDialogTitle-root,
+  .print-company .MuiDialogContent-root {
+    padding: 0 1rem !important;
+  }
+
+  .print-company table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* ensure table columns don't overflow */
+    page-break-inside: auto;
+    margin-bottom: 8px;
+  }
+
+  /* Make long lists (IPs, subdomains) render in multi-columns for readable print output */
+  .print-company ul.two-column-list {
+    -webkit-column-count: 2;
+    column-count: 2;
+    -webkit-column-gap: 24px;
+    column-gap: 24px;
+    margin: 0 0 1em 1.2em;
+    /* Prevent list items from breaking awkwardly across columns/pages */
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+  }
+
+  .print-company th,
+  .print-company td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    color: #000 !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+    box-sizing: border-box;
+  }
+
+  /* Ensure headings and company sections are not split across pages */
+  .print-company h1, .print-company h2, .print-company h3, .print-company .section-title {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+  }
+
+  .print-company { page-break-inside: avoid; }
+
+  /* Set explicit page margins to avoid browser trimming heading/footer */
+  @page { size: A4; margin: 12mm; }
+
+  .print-company img, .print-company svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Avoid printing action buttons and other UI chrome */
+  .no-print, .no-print * { display: none !important; }
+
+  /* Ensure print preserves colors for branding elements */
+  .print-company { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
