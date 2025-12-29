@@ -6,7 +6,7 @@ const colors = require('colors');
 require('dotenv').config({ path: __dirname + '/../../.env' });
 
 // Connect to DB
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/global-tracker';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/global_tracking';
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
@@ -14,6 +14,11 @@ mongoose.connect(MONGODB_URI, {
 });
 
 const createAdmin = async () => {
+  // Guard: prevent accidental execution in production unless explicitly allowed
+  if (process.env.NODE_ENV === 'production' && process.env.DEV_UTILS_ALLOWED !== 'true') {
+    console.error('Developer utility scripts are disabled in production. Set DEV_UTILS_ALLOWED=true to enable.');
+    process.exit(1);
+  }
   try {
     // Check if admin already exists
     const adminExists = await User.findOne({ email: 'admin@example.com' });

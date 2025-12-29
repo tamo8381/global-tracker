@@ -59,7 +59,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 const StatCard = ({ title, value, icon: Icon, color, isLoading }) => {
   const hasValue = value !== null && value !== undefined;
   return (
-    <Card sx={{ height: '100%', minHeight: 120, borderRadius: 3, boxShadow: 3, display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ height: '100%', minHeight: 120, borderRadius: 3, boxShadow: 3, display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
       <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
         <Box sx={{ flex: 1 }}>
           <Typography color="textSecondary" variant="subtitle2" gutterBottom sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
@@ -95,7 +95,7 @@ const StatCard = ({ title, value, icon: Icon, color, isLoading }) => {
 };
 
 const QuickStatCard = ({ title, value, subtext, icon: Icon, color }) => (
-  <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2 }}>
+  <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2, display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
     <CardContent>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
@@ -285,8 +285,10 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth={false} disableGutters sx={{ width: '100%', pb: 4 }}>
-      {/* Center inner content and constrain width so items don't hug the left edge */}
-      <Box sx={{ maxWidth: 1600, mx: 'auto', width: '100%' }}>
+      {/* Center inner content and constrain width so items don't stretch edge-to-edge
+          on ultra-wide screens. Use a centered maxWidth so cards grow naturally
+          while preventing large empty gutters on very wide monitors. */}
+      <Box sx={{ maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1800 }, mx: 'auto', width: '100%', px: { xs: 2, md: 4 } }}>
       <Card
         sx={{
           mb: 3,
@@ -365,8 +367,8 @@ const Dashboard = () => {
       </Card>
 
       {/* Main Stats */}
-      <Grid container spacing={11} sx={{ mb: 4 }} >
-        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex' }}>
+      <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }} alignItems="stretch">
+        <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <StatCard 
              title="Total Countries" 
              value={loading.stats ? '...' : stats?.totalCountries || 0} 
@@ -375,7 +377,7 @@ const Dashboard = () => {
              isLoading={loading.stats}
            />
          </Grid>
-        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex' }}>
+          <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <StatCard 
              title="Total Companies" 
              value={loading.stats ? '...' : stats?.totalCompanies || 0} 
@@ -384,7 +386,7 @@ const Dashboard = () => {
              isLoading={loading.stats}
            />
          </Grid>
-        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex' }}>
+          <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <StatCard 
              title="Total People" 
              value={loading.stats ? '...' : stats?.totalPeople || 0} 
@@ -393,7 +395,7 @@ const Dashboard = () => {
              isLoading={loading.stats}
            />
          </Grid>
-        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex' }}>
+          <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <StatCard 
              title="Active Tracking" 
              value={loading.stats ? '...' : stats?.activeTracking || 0} 
@@ -408,8 +410,8 @@ const Dashboard = () => {
       <Typography variant="h6" gutterBottom>
         Quick Stats
       </Typography>
-      <Grid container spacing={8} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+      <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }} alignItems="stretch">
+        <Grid item xs={12} sm={6} md={3} lg={3} xl={2} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <QuickStatCard 
              title="Avg Companies per Country"
              value={loading.stats ? '...' : stats?.quickStats?.avgCompaniesPerCountry?.toFixed(2) || '0'}
@@ -417,7 +419,7 @@ const Dashboard = () => {
              color="primary"
            />
          </Grid>
-        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex' }}>
+        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <QuickStatCard 
              title="Avg People per Company"
              value={loading.stats ? '...' : stats?.quickStats?.avgPeoplePerCompany?.toFixed(2) || '0'}
@@ -425,7 +427,7 @@ const Dashboard = () => {
              color="secondary"
            />
          </Grid>
-        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex' }}>
+        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <QuickStatCard 
              title="Total IP Addresses"
              value={loading.stats ? '...' : stats?.quickStats?.totalIPs || 0}
@@ -433,7 +435,7 @@ const Dashboard = () => {
              color="info"
            />
          </Grid>
-        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex' }}>
+        <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex', flex: 1, minWidth: 0 }}>
            <QuickStatCard 
              title="Total Subdomains"
              value={loading.stats ? '...' : stats?.quickStats?.totalSubdomains || 0}
@@ -443,74 +445,78 @@ const Dashboard = () => {
          </Grid>
        </Grid>
       
-      {/* Two-column layout: Growth full-width, Distribution below (System Overview and Recent Activities removed) */}
-      <Grid container spacing={8} sx={{ mb: 4 }}>
-        {/* Growth: full width */}
-        <Grid item xs={12}>
-          <Card sx={{ borderRadius: 3, mb: 3 }}>
+      {/* Responsive layout: Growth and Distribution side-by-side on md+ */}
+      <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }} alignItems="stretch">
+        {/* Growth: primary column (takes more space on larger screens) */}
+        <Grid item xs={12} md={8} lg={3} xl={2} >
+          <Card sx={{ borderRadius: 3, mb: 3, width: 850, height: '100%' }}>
             <CardHeader 
               title="Growth Overview" 
               subheader="Companies and People Growth"
             />
             <Divider />
-            <CardContent sx={{ height: 420,width: 520 }}>
+            <CardContent sx={{ p: 0 }}>
               {growthData.length === 0 ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: { xs: 320, md: 480 }, p: 2 }}>
                   <Typography variant="body2" color="textSecondary">No growth data yet.</Typography>
                 </Box>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={growthData}
-                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="companies" fill={theme.palette.primary.main} name="Companies" />
-                    <Bar dataKey="people" fill={theme.palette.secondary.main} name="People" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <Box sx={{ width: '100%', height: { xs: 320, md: 480 } }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={growthData}
+                      margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="companies" fill={theme.palette.primary.main} name="Companies" />
+                      <Bar dataKey="people" fill={theme.palette.secondary.main} name="People" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
               )}
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Distribution row */}
-        <Grid item xs={12}>
-          <Card sx={{ mb: 3, borderRadius: 3 }}>
+        {/* Distribution: secondary column (right side on md+) */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ mb: 3, borderRadius: 3, width: 850, height: '100%' }}>
             <CardHeader 
               title="Distribution by Region" 
               subheader="Companies by Region"
             />
             <Divider />
-            <CardContent sx={{ height: 420,width: 600, display: 'flex', justifyContent: 'center' }}>
+            <CardContent sx={{ p: 0 }}>
               {regionData.length === 0 ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: { xs: 320, md: 480 } }}>
                   <Typography variant="body2" color="textSecondary">No region distribution data.</Typography>
                 </Box>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={regionData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={180}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {regionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <Box sx={{ width: 800, height: { xs: 320, md: 480 }, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={regionData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={Math.min(120, typeof window !== 'undefined' ? Math.floor((window.innerWidth || 800) / 6) : 120)}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {regionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Box>
               )}
             </CardContent>
           </Card>

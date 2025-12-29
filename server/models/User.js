@@ -51,6 +51,12 @@ userSchema.pre('save', async function(next) {
     next();
   }
 
+  // If the password appears to already be a bcrypt hash, skip re-hashing.
+  // This prevents double-hashing when maintenance scripts set a hashed value.
+  if (typeof this.password === 'string' && this.password.startsWith('$2')) {
+    return next();
+  }
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });

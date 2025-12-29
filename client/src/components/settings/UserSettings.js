@@ -33,6 +33,7 @@ import {
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import usersApi from '../../services/usersApi';
+import { useSnackbar } from 'notistack';
 
 const UserForm = ({ open, handleClose, user, onSubmit }) => {
   const isEdit = Boolean(user?._id);
@@ -43,7 +44,7 @@ const UserForm = ({ open, handleClose, user, onSubmit }) => {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
       email: user?.email || '',
-      role: user?.role || 'Viewer',
+      role: user?.role || 'user',
     },
     validationSchema: Yup.object({
       firstName: Yup.string().required('First name is required'),
@@ -51,9 +52,14 @@ const UserForm = ({ open, handleClose, user, onSubmit }) => {
       email: Yup.string().email('Invalid email address').required('Email is required'),
       role: Yup.string().required('Role is required'),
     }),
-    onSubmit: (values) => {
-      onSubmit(values);
-      handleClose();
+    onSubmit: async (values) => {
+      try {
+        await onSubmit(values);
+        handleClose();
+      } catch (err) {
+        // Keep the form open so the user can fix the issue; parent shows an error snackbar
+        console.error('Submit failed, keeping dialog open', err);
+      }
     },
   });
 
@@ -110,9 +116,9 @@ const UserForm = ({ open, handleClose, user, onSubmit }) => {
                   onBlur={formik.handleBlur}
                   label="Role"
                 >
-                  <MenuItem value="Admin">Admin</MenuItem>
-                  <MenuItem value="Editor">Editor</MenuItem>
-                  <MenuItem value="Viewer">Viewer</MenuItem>
+                  <MenuItem value="admin">Admin</MenuItem>
+                  <MenuItem value="user">Editor</MenuItem>
+                  <MenuItem value="user">Viewer</MenuItem>
                 </Select>
                 {formik.touched.role && formik.errors.role && (
                   <FormHelperText>{formik.errors.role}</FormHelperText>
@@ -161,6 +167,7 @@ const UserSettings = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [formMode, setFormMode] = useState('add');
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -197,11 +204,15 @@ const UserSettings = () => {
       if (formMode === 'add') {
         const res = await usersApi.create(values);
         setUsers([...users, res.data.data]);
+        enqueueSnackbar('User added', { variant: 'success' });
       } else {
         const res = await usersApi.update(selectedUser._id, values);
         setUsers(users.map(user => user._id === selectedUser._id ? res.data.data : user));
+        enqueueSnackbar('User updated', { variant: 'success' });
       }
     } catch (error) {
+      const msg = error?.response?.data?.message || error?.message || 'Error saving user';
+      enqueueSnackbar(msg, { variant: 'error' });
       console.error('Error saving user:', error);
     }
   };
@@ -216,6 +227,8 @@ const UserSettings = () => {
       await usersApi.delete(selectedUser._id);
       setUsers(users.filter(user => user._id !== selectedUser._id));
     } catch (error) {
+      const msg = error?.response?.data?.message || error?.message || 'Error deleting user';
+      enqueueSnackbar(msg, { variant: 'error' });
       console.error('Error deleting user:', error);
     } finally {
       setOpenDeleteDialog(false);

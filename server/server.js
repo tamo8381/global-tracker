@@ -52,7 +52,7 @@ try {
 
 // Enable CORS with specific origin
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: ['http://172.20.110.202:3000', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -74,7 +74,7 @@ app.use('/uploads', (req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Database connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/global-tracker';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/global_tracking';
 
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,

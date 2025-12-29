@@ -58,6 +58,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeSettings } from '../contexts/ThemeSettingsContext';
 import api from '../services/api';
 import AvatarWithFallback from '../components/AvatarWithFallback';
+import { useSnackbar } from 'notistack';
 
 // Tab Panel Component
 function TabPanel(props) {
@@ -347,6 +348,7 @@ const ProfileSettings = ({ user }) => {
 
 const UserSettings = () => {
   const { hasRole } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
   // Hooks must be called unconditionally
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -409,12 +411,17 @@ const UserSettings = () => {
       if (formMode === 'add') {
         const res = await usersApi.create(values);
         setUsers([...users, res.data.data]);
+        enqueueSnackbar('User added', { variant: 'success' });
       } else {
         const res = await usersApi.update(selectedUser._id, values);
         setUsers(users.map(user => user._id === selectedUser._id ? res.data.data : user));
+        enqueueSnackbar('User updated', { variant: 'success' });
       }
     } catch (error) {
-      console.error('Error saving user:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Error saving user';
+      enqueueSnackbar(msg, { variant: 'error' });
+      // Rethrow so the calling form can detect the failure and stay open
+      throw error;
     }
   };
 
@@ -427,7 +434,10 @@ const UserSettings = () => {
     try {
       await usersApi.delete(selectedUser._id);
       setUsers(users.filter(u => u._id !== selectedUser._id));
+      enqueueSnackbar('User deleted', { variant: 'success' });
     } catch (error) {
+      const msg = error?.response?.data?.message || error?.message || 'Error deleting user';
+      enqueueSnackbar(msg, { variant: 'error' });
       console.error('Error deleting user:', error);
     } finally {
       setOpenDeleteDialog(false);
@@ -549,14 +559,19 @@ const UserForm = ({ open, handleClose, user, onSubmit }) => {
       password: passwordSchema,
       confirmPassword: confirmPasswordSchema,
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const payload = { ...values };
       if (!payload.password) {
         delete payload.password;
       }
       delete payload.confirmPassword;
-      onSubmit(payload);
-      handleClose();
+      try {
+        await onSubmit(payload);
+        handleClose();
+      } catch (err) {
+        // Keep the dialog open so the user can correct the error
+        console.error('Submit failed, keeping dialog open', err);
+      }
     },
   });
 

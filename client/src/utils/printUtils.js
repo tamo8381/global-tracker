@@ -1,5 +1,5 @@
 // Utilities to build printable DOM elements for company / system exports
-export function createCompanyPrintElement(company = {}, baseURL = '') {
+export async function createCompanyPrintElement(company = {}, baseURL = '') {
   // Normalize provided baseURL or fall back to current origin. We avoid importing
   // the api module here to keep the helper lightweight and test-friendly.
   const base = (baseURL && String(baseURL).replace(/\/$/, '')) || (typeof window !== 'undefined' ? window.location.origin.replace(/\/$/, '') : '');
@@ -91,7 +91,36 @@ export function createCompanyPrintElement(company = {}, baseURL = '') {
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
 
-  (company.people || []).forEach(p => {
+  // Helper: try to fetch the image and convert to data URL to avoid cross-origin
+  // or mixed-content blocking when printing. If this fails, we fall back to
+  // using the original absolute URL so the onerror handler can attempt a
+  // backend fallback or SVG placeholder.
+  const toDataUrl = async (url) => {
+    try {
+      if (typeof fetch !== 'function') return null;
+      // Abort if the fetch takes too long to avoid long-running tests/environments
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeoutMs = 1500;
+      let timer = null;
+      if (controller) {
+        timer = setTimeout(() => controller.abort(), timeoutMs);
+      }
+      const resp = await fetch(url, { mode: 'cors', signal: controller ? controller.signal : undefined });
+      if (timer) clearTimeout(timer);
+      if (!resp.ok) return null;
+      const blob = await resp.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      return null;
+    }
+  };
+
+  for (const p of (company.people || [])) {
     const tr = document.createElement('tr');
     const photoTd = document.createElement('td');
     photoTd.style.padding = '6px';
@@ -99,21 +128,32 @@ export function createCompanyPrintElement(company = {}, baseURL = '') {
     if (p.photo) {
       const img = document.createElement('img');
       // Use the resolved base (prefer explicit baseURL param, otherwise use server default)
-      img.src = `${base}/uploads/${p.photo}`;
-      // If the provided base points at the client origin (e.g. CRA dev server),
-      // try a reasonable fallback to the default backend port (5000) when the
-      // image fails to load — this avoids showing the alt text (full name).
-      img.onerror = function () {
+      const fileUrl = `${base}/uploads/${p.photo}`;
+      const fallbackOrigin = (typeof window !== 'undefined') ? window.location.origin.replace(/:\d+$/, ':5000') : base;
+      const fallbackUrl = `${fallbackOrigin}/uploads/${p.photo}`;
+      // Try to inline from primary, then fallback; if both fail, use an SVG
+      // placeholder so the photo column always renders an image.
+      let dataUrl = null;
+      try {
+        dataUrl = await toDataUrl(fileUrl);
+      } catch (e) {
+        dataUrl = null;
+      }
+      if (!dataUrl) {
         try {
-          this.onerror = null;
-          const fallback = (typeof window !== 'undefined')
-            ? window.location.origin.replace(/:\d+$/, ':5000')
-            : this.src;
-          this.src = `${fallback}/uploads/${p.photo}`;
+          dataUrl = await toDataUrl(fallbackUrl);
         } catch (e) {
-          // swallow errors silently
+          dataUrl = null;
         }
-      };
+      }
+      if (dataUrl) {
+        img.src = dataUrl;
+      } else {
+        const initials = `${(p.firstName || '').charAt(0) || ''}${(p.lastName || '').charAt(0) || ''}`.toUpperCase() || 'U';
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72'><rect width='100%' height='100%' fill='%23e0e0e0'/><text x='50%' y='50%' font-size='28' dominant-baseline='middle' text-anchor='middle' fill='%23555' font-family='Arial, Helvetica, sans-serif'>${initials}</text></svg>`;
+        img.src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+      }
+      img.setAttribute('data-print-src', img.src);
       img.alt = `${p.firstName || ''} ${p.lastName || ''}`;
       img.style.width = '36px';
       img.style.height = '36px';
@@ -142,7 +182,7 @@ export function createCompanyPrintElement(company = {}, baseURL = '') {
     tr.appendChild(emailTd);
     tr.appendChild(posTd);
     tbody.appendChild(tr);
-  });
+  }
 
   table.appendChild(tbody);
   container.appendChild(table);
@@ -192,15 +232,15 @@ export async function createAllCompaniesPrintElement(fetchCompanies, fetchPeople
   title.textContent = 'Global Export - Companies & People';
   root.appendChild(title);
 
-  companies.forEach(c => {
+  for (const c of companies) {
     const cCopy = { ...c, people: peopleByCompany[c._id] || [] };
-    const section = createCompanyPrintElement(cCopy, baseURL);
+    const section = await createCompanyPrintElement(cCopy, baseURL);
     section.style.pageBreakInside = 'avoid';
     section.style.marginTop = '18px';
     root.appendChild(section);
     const hr = document.createElement('hr');
     root.appendChild(hr);
-  });
+  }
 
   return root;
 }
@@ -216,6 +256,7 @@ export async function printElementInIframe(element, opts = { waitMs: 300 }) {
     html,body{height:100%;margin:0;padding:0;color:#000;background:#fff}
     .print-company{padding:12mm;box-sizing:border-box;color:#000;background:#fff;max-width:100%}
     .print-company h1{margin:0 0 6px 0;font-size:20px}
+    .print-company img{width:36px;height:36px;object-fit:cover;border-radius:50%;display:inline-block}
     .print-company table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8px}
     .print-company th,.print-company td{border:1px solid #ddd;padding:6px;vertical-align:top;word-break:break-word;overflow-wrap:anywhere}
     .print-company ul.two-column-list{-webkit-column-count:2;column-count:2;column-gap:24px;margin:0 0 1em 1.2em;break-inside:avoid;-webkit-column-break-inside:avoid}
@@ -284,6 +325,7 @@ export async function printHTMLString(htmlString, extraCSS = '') {
       const safeCSS = extraCSS || `
         html,body{height:100%;margin:0;padding:0;color:#000;background:#fff}
         .print-company{position:static;box-sizing:border-box;padding:12mm;max-width:100%;}
+        .print-company img{width:36px;height:36px;object-fit:cover;border-radius:50%;display:inline-block}
         .print-company ul.two-column-list{-webkit-column-count:2;column-count:2;-webkit-column-gap:24px;column-gap:24px;margin:0 0 1em 1.2em;break-inside:avoid;}
         .print-company table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8px}
         .print-company th,.print-company td{border:1px solid #ddd;padding:6px;word-break:break-word;overflow-wrap:anywhere;vertical-align:top}

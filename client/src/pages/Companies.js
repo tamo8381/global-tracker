@@ -207,7 +207,48 @@ const CompanyForm = ({ open, handleClose, company, onSubmit }) => {
 
           <Grid container spacing={2}>
             <Grid item xs={12}>
-          <TextField
+              <TextField
+                margin="normal"
+                fullWidth
+                id="name"
+                name="name"
+                label="Company Name"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+                disabled={formik.isSubmitting}
+              />
+
+              <FormControl fullWidth margin="normal" error={formik.touched.country && Boolean(formik.errors.country)}>
+                <InputLabel id="country-select-label">Country</InputLabel>
+                <Select
+                  labelId="country-select-label"
+                  id="country"
+                  name="country"
+                  value={formik.values.country}
+                  label="Country"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={formik.isSubmitting || loadingCountries}
+                >
+                  <MenuItem value="">
+                    <em>Select Country</em>
+                  </MenuItem>
+                  {countries.map(c => (
+                    <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.country && formik.errors.country && (
+                  <FormHelperText>{formik.errors.country}</FormHelperText>
+                )}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <Button size="small" onClick={() => window.location.href = '/countries'}>Add Country</Button>
+                </Box>
+              </FormControl>
+
+              <TextField
                 margin="normal"
                 fullWidth
                 id="industry"
@@ -487,7 +528,7 @@ const Companies = () => {
       // Prefer an explicit API base if provided via env; otherwise fall back to
       // a reasonable backend origin (replace client port with 5000).
       const serverBase = (process.env.REACT_APP_API_URL && String(process.env.REACT_APP_API_URL).replace(/\/api\/v1\/?$/i, '').replace(/\/$/, '')) || window.location.origin.replace(/:\d+$/, ':5000');
-      const el = createCompanyPrintElement(viewCompany, serverBase);
+      const el = await createCompanyPrintElement(viewCompany, serverBase);
       html = el.outerHTML;
       console.debug('Companies.handlePrint: generated HTML length', html.length);
       await printHTMLString(html);

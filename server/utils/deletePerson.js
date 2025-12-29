@@ -2,6 +2,12 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const mongoose = require('mongoose');
 const Person = require('../models/Person');
 
+// Guard: prevent accidental execution in production unless explicitly allowed
+if (process.env.NODE_ENV === 'production' && process.env.DEV_UTILS_ALLOWED !== 'true') {
+  console.error('Developer utility scripts are disabled in production. Set DEV_UTILS_ALLOWED=true to enable.');
+  process.exit(1);
+}
+
 const run = async () => {
   console.log('Script starting...');
   const mongoUri = process.env.MONGODB_URI;
