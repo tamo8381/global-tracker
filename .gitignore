@@ -2,14 +2,24 @@
 node_modules/
 npm-debug.log*
 
+# Logs
+*.log
+server.log
+
 # Environment
 .env
 .env.local
+.env.production
 
-# Build outputs
+# Frontend build
 client/build/
 client/dist/
-server/dist/
+
+# Backend-served frontend build
+server/public/*
+!server/public/uploads/
+!server/public/uploads/.gitkeep
 
 # OS
 .DS_Store
+Thumbs.db
